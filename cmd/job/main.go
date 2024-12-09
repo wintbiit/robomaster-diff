@@ -81,7 +81,7 @@ func main() {
 		}(id)
 	}
 
-	diffRecords := make([]fmt.Stringer, 0)
+	diffRecords := make([]*lib.DiffRecord, 0)
 	go func() {
 		for d := range diffs {
 			diffRecords = append(diffRecords, d)
@@ -94,7 +94,6 @@ func main() {
 	log.Info().
 		Int("total", len(ids)).
 		Int("diff_count", len(diffRecords)).
-		Stringers("diffs", diffRecords).
 		Msg("Diff done")
 
 	if len(diffRecords) == 0 {
@@ -119,8 +118,7 @@ func main() {
 	commitTitle := fmt.Sprintf("diff %d records", len(diffRecords))
 	commitMessage := strings.Builder{}
 	for _, rec := range diffRecords {
-		commitMessage.WriteString(rec.String())
-		commitMessage.WriteString("\n")
+		commitMessage.WriteString(rec.RichString())
 	}
 
 	cmd = exec.Command("git", "commit", "-m", commitTitle, "-m", commitMessage.String())

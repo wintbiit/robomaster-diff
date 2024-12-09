@@ -60,6 +60,10 @@ func (d *DiffRecord) String() string {
 	return fmt.Sprintf("[%s] %s", d.Title, GetAnnouncementUrl(d.Id))
 }
 
+func (d *DiffRecord) RichString() string {
+	return fmt.Sprintf("<link icon='file-link-docx_outlined' url='%s'>%s</link> <text_tag color='turquoise'>%d</text_tag>\n---", GetAnnouncementUrl(d.Id), d.Title, d.Id)
+}
+
 func Sum(ctx context.Context, id int) ([]byte, *DiffRecord, error) {
 	url := GetAnnouncementUrl(id)
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
