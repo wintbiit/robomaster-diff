@@ -74,3 +74,37 @@ func extractHtmlTitle(content []byte) (string, error) {
 	findHead(doc)
 	return title, nil
 }
+
+type HashSet[T comparable] map[T]struct{}
+
+func NewHashSet[T comparable]() HashSet[T] {
+	return make(HashSet[T])
+}
+
+func (s HashSet[T]) Add(v T) {
+	s[v] = struct{}{}
+}
+
+func (s HashSet[T]) AddAll(values ...T) {
+	for _, v := range values {
+		s.Add(v)
+	}
+}
+
+func (s HashSet[T]) Contains(v T) bool {
+	_, ok := s[v]
+	return ok
+}
+
+func (s HashSet[T]) Remove(v T) {
+	delete(s, v)
+}
+
+func (s HashSet[T]) ToSlice() []T {
+	result := make([]T, 0, len(s))
+	for v := range s {
+		result = append(result, v)
+	}
+
+	return result
+}

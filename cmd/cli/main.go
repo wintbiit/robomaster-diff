@@ -15,31 +15,38 @@ import (
 	lib "github.com/wintbiit/robomaster-diff"
 )
 
-type diffRecord struct {
-	id    string
-	title string
-}
-
-func (d *diffRecord) String() string {
-	return fmt.Sprintf("[%s] %s", d.id, d.title)
-}
-
 func main() {
-	singleId := flag.String("id", "", "Single ID to fetch")
+	singleId := flag.Int("id", 0, "Single ID to fetch")
 	batchIds := flag.String("ids", "", "Comma separated list of IDs to fetch")
+	beginId := flag.Int("begin", 0, "Begin ID")
+	endId := flag.Int("end", 0, "End ID")
 	qps := flag.Int("qps", 5, "QPS limit")
 	ua := flag.String("ua", "", "User-Agent")
 	storagePath := flag.String("storage", "./", "Storage path")
 
 	flag.Parse()
 
-	ids := make([]string, 0)
-	if *singleId != "" {
-		ids = append(ids, *singleId)
+	ids := lib.NewHashSet[int]()
+	if *singleId != 0 {
+		ids.Add(*singleId)
 	}
 
 	if *batchIds != "" {
-		ids = append(ids, strings.Split(*batchIds, ",")...)
+		for _, id := range strings.Split(*batchIds, ",") {
+			i, err := strconv.Atoi(id)
+			if err != nil {
+				log.Error().Err(err).Str("id", id).Msg("failed to parse ID")
+				continue
+			}
+
+			ids.Add(i)
+		}
+	}
+
+	if *beginId != 0 && *endId != 0 && *beginId < *endId {
+		for i := *beginId; i <= *endId; i++ {
+			ids.Add(i)
+		}
 	}
 
 	if len(ids) == 0 {
@@ -54,27 +61,27 @@ func main() {
 	var wg sync.WaitGroup
 	pb := progressbar.NewOptions(len(ids), progressbar.OptionSetWriter(log.Logger))
 	wg.Add(len(ids))
-	diffs := make(chan diffRecord, len(ids))
-	for _, id := range ids {
-		go func(id string) {
+	diffs := make(chan *lib.DiffRecord, len(ids))
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Minute)
+	defer cancel()
+	for _, id := range ids.ToSlice() {
+		go func(id int) {
 			defer wg.Done()
 			defer pb.Add(1)
-			ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
-			defer cancel()
-			hash, title, err := lib.Sum(ctx, id)
+			hash, rec, err := lib.Sum(ctx, id)
 			if err != nil {
-				log.Error().Err(err).Str("id", id).Msg("failed to fetch")
+				log.Error().Err(err).Int("id", id).Msg("failed to fetch")
 				return
 			}
 
 			diff, err := lib.Diff(ctx, id, hash)
 			if err != nil {
-				log.Error().Err(err).Str("id", id).Msg("failed to diff")
+				log.Error().Err(err).Int("id", id).Msg("failed to diff")
 				return
 			}
 
 			if diff {
-				diffs <- diffRecord{id: id, title: title}
+				diffs <- rec
 			}
 		}(id)
 	}
@@ -82,7 +89,7 @@ func main() {
 	diffRecords := make([]fmt.Stringer, 0)
 	go func() {
 		for d := range diffs {
-			diffRecords = append(diffRecords, &d)
+			diffRecords = append(diffRecords, d)
 		}
 	}()
 
