@@ -39,12 +39,12 @@ func init() {
 	os.MkdirAll(storagePath, 0o755)
 }
 
-func GetAnnouncementUrl() string {
+func GetAnnouncementUrl(id int) string {
 	if os.Getenv("LANG") == "EN" {
-		return AnnouncementUrlEn
+		return fmt.Sprintf(AnnouncementUrlEn, id)
 	}
 
-	return AnnouncementUrlZh
+	return fmt.Sprintf(AnnouncementUrlZh, id)
 }
 
 func GetStoragePath() string {
@@ -57,11 +57,11 @@ type DiffRecord struct {
 }
 
 func (d *DiffRecord) String() string {
-	return fmt.Sprintf("[%d] %s", d.Id, d.Title)
+	return fmt.Sprintf("[%s] %s", d.Title, GetAnnouncementUrl(d.Id))
 }
 
 func Sum(ctx context.Context, id int) ([]byte, *DiffRecord, error) {
-	url := fmt.Sprintf(GetAnnouncementUrl(), id)
+	url := GetAnnouncementUrl(id)
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "creating request")
