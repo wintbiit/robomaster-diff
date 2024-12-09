@@ -14,13 +14,32 @@ import (
 	lib "github.com/wintbiit/robomaster-diff"
 )
 
-func main() {
+func init() {
 	// find git executable
 	if _, err := exec.LookPath("git"); err != nil {
-		log.Error().Err(err).Msg("git not found")
-		return
+		log.Fatal().Msg("git not found")
 	}
 
+	if email, exists := os.LookupEnv("GIT_EMAIL"); exists {
+		cmd := exec.Command("git", "config", "--global", "user.email", email)
+		cmd.Stdout = log.Logger
+		cmd.Stderr = log.Logger
+		if err := cmd.Run(); err != nil {
+			log.Fatal().Err(err).Msg("failed to set git email")
+		}
+	}
+
+	if name, exists := os.LookupEnv("GIT_USER"); exists {
+		cmd := exec.Command("git", "config", "--global", "user.name", name)
+		cmd.Stdout = log.Logger
+		cmd.Stderr = log.Logger
+		if err := cmd.Run(); err != nil {
+			log.Fatal().Err(err).Msg("failed to set git user")
+		}
+	}
+}
+
+func main() {
 	beginId := getEnvInt("BEGIN_ID", 0)
 	endId := getEnvInt("END_ID", 0)
 

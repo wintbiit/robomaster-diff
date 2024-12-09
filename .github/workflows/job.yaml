@@ -36,7 +36,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Run Job
-        run: docker run -e BEGIN_ID=${{ vars.BEGIN_ID }} -e END_ID=${{ vars.END_ID }} -v ./:/app --rm ghcr.io/${{ github.repository }}/job:latest robomaster-diff-job
+        run: docker run -e BEGIN_ID=${{ vars.BEGIN_ID }} -e END_ID=${{ vars.END_ID }} -e QPS=${{ vars.QPS }} -e GIT_EMAIL=${{ github.actor }}@users.noreply.github.com -e GIT_USER=${{ github.actor }} -v ./:/app --rm ghcr.io/${{ github.repository }}/job:latest robomaster-diff-job
 
       - name: Push Archive
         run: |
