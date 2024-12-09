@@ -1,9 +1,0 @@
-FROM ghcr.io/wintbiit/robomaster-diff/job:latest AS JOB
-
-RUN apk add --no-cache cron
-
-COPY entrypoint-cron.sh /entrypoint.sh
-
-RUN chmod +x /entrypoint.sh
-
-ENTRYPOINT ["/entrypoint.sh"]

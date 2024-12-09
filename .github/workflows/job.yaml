@@ -35,7 +35,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Run Job
-        run: docker run -v ./:/app --rm ghcr.io/${{ github.repository }}/job:latest
+        run: docker run -v ./:/app --rm ghcr.io/${{ github.repository }}/job:latest robomaster-diff-job
 
       - name: Push Archive
         run: |

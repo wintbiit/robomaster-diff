@@ -71,21 +71,3 @@ jobs:
             org.opencontainers.image.title=robomaster-diff
           cache-from: type=gha
           cache-to: type=gha,mode=max
-      - name: Docker Push Cron
-        uses: docker/build-push-action@v6
-        if: github.event_name == 'push'
-        with:
-          context: .
-          push: true
-          platforms: linux/amd64
-          file: Dockerfile-cron
-          tags: |
-            ghcr.io/${{ github.repository }}/cron:latest
-            ghcr.io/${{ github.repository }}/cron:${{ github.sha }}
-          labels: |
-            org.opencontainers.image.source=https://github.com/${{ github.repository }}
-            org.opencontainers.image.revision=${{ github.sha }}
-            org.opencontainers.image.created=${{ github.event.head_commit.timestamp }}
-            org.opencontainers.image.title=robomaster-diff
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
