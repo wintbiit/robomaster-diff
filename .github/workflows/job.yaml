@@ -1,5 +1,8 @@
 name: Watch Job
 
+permissions:
+  contents: write
+
 on:
   schedule:
     - cron: '*/15 * * * *' # every 15 minutes
@@ -12,7 +15,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        branches: archive
+        with:
+          ref: archive
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3

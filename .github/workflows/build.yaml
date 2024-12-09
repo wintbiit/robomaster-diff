@@ -54,7 +54,6 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
       - name: Docker Push Job
-        id: docker_job
         uses: docker/build-push-action@v6
         if: github.event_name == 'push'
         with:
@@ -75,7 +74,6 @@ jobs:
       - name: Docker Push Cron
         uses: docker/build-push-action@v6
         if: github.event_name == 'push'
-        needs: docker_job
         with:
           context: .
           push: true
