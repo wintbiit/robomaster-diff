@@ -26,6 +26,7 @@ func main() {
 
 	if beginId >= endId {
 		log.Error().Msg("invalid range, please define BEGIN_ID and END_ID")
+		return
 	}
 
 	ids := make([]int, endId-beginId+1)

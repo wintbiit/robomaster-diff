@@ -21,4 +21,4 @@ COPY --from=builder /app/main /usr/local/bin/robomaster-diff
 
 VOLUME /app
 
-ENTRYPOINT ["/usr/local/bin/robomaster-diff"]
+CMD ["/usr/local/bin/robomaster-diff"]

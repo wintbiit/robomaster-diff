@@ -10,7 +10,7 @@ COPY . .
 
 RUN go build -trimpath -ldflags "-s -w" -o /app/main cmd/job/main.go
 
-FROM alpine:3.12
+FROM ghcr.io/wintbiit/robomaster-diff:latest
 ENV STORAGE_PATH=/app
 
 RUN apk add --no-cache ca-certificates git tzdata
