@@ -61,7 +61,7 @@ func (d *DiffRecord) String() string {
 }
 
 func (d *DiffRecord) RichString() string {
-	return fmt.Sprintf("<link icon='file-link-docx_outlined' url='%s'>%s</link> <text_tag color='turquoise'>%d</text_tag>\n---", GetAnnouncementUrl(d.Id), d.Title, d.Id)
+	return fmt.Sprintf("<link icon='file-link-docx_outlined' url='%s'>%s</link> <text_tag color='turquoise'>%d</text_tag>\n---\n", GetAnnouncementUrl(d.Id), d.Title, d.Id)
 }
 
 func Sum(ctx context.Context, id int) ([]byte, *DiffRecord, error) {
