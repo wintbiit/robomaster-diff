@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"flag"
-	"fmt"
 	"os"
 	"strconv"
 	"strings"
@@ -68,25 +67,27 @@ func main() {
 		go func(id int) {
 			defer wg.Done()
 			defer pb.Add(1)
-			hash, rec, err := lib.Sum(ctx, id)
+			content, rec, err := lib.Fetch(ctx, id)
 			if err != nil {
 				log.Error().Err(err).Int("id", id).Msg("failed to fetch")
 				return
 			}
 
-			diff, err := lib.Diff(ctx, id, hash)
+			diff, err := lib.Diff(ctx, rec, content)
 			if err != nil {
 				log.Error().Err(err).Int("id", id).Msg("failed to diff")
 				return
 			}
 
-			if diff {
-				diffs <- rec
+			if diff != nil {
+				diffs <- diff
+			} else {
+				log.Debug().Int("id", id).Msg("no diff")
 			}
 		}(id)
 	}
 
-	diffRecords := make([]fmt.Stringer, 0)
+	diffRecords := make([]*lib.DiffRecord, 0)
 	go func() {
 		for d := range diffs {
 			diffRecords = append(diffRecords, d)
@@ -100,6 +101,6 @@ func main() {
 	log.Info().
 		Int("total", len(ids)).
 		Int("diff_count", len(diffRecords)).
-		Stringers("diffs", diffRecords).
+		Interface("diff_records", diffRecords).
 		Msg("Diff done")
 }

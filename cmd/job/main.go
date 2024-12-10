@@ -2,11 +2,11 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 	"os/exec"
 	"strconv"
-	"strings"
 	"sync"
 	"time"
 
@@ -63,20 +63,22 @@ func main() {
 	for _, id := range ids {
 		go func(id int) {
 			defer wg.Done()
-			hash, rec, err := lib.Sum(ctx, id)
+			content, rec, err := lib.Fetch(ctx, id)
 			if err != nil {
 				log.Error().Err(err).Int("id", id).Msg("failed to fetch")
 				return
 			}
 
-			diff, err := lib.Diff(ctx, id, hash)
+			diff, err := lib.Diff(ctx, rec, content)
 			if err != nil {
 				log.Error().Err(err).Int("id", id).Msg("failed to diff")
 				return
 			}
 
-			if diff {
-				diffs <- rec
+			if diff != nil {
+				diffs <- diff
+			} else {
+				log.Debug().Int("id", id).Msg("no diff")
 			}
 		}(id)
 	}
@@ -116,17 +118,18 @@ func main() {
 
 	log.Info().Msg("running git commit")
 	commitTitle := fmt.Sprintf("diff %d records", len(diffRecords))
-	commitMessage := strings.Builder{}
-	for _, rec := range diffRecords {
-		commitMessage.WriteString(rec.RichString())
+	commitMessage, err := json.Marshal(diffRecords)
+	if err != nil {
+		log.Error().Err(err).Msg("failed to marshal diff records")
+		return
 	}
 
-	cmd = exec.Command("git", "commit", "-m", commitTitle, "-m", commitMessage.String())
+	cmd = exec.Command("git", "commit", "-m", commitTitle, "-m", string(commitMessage))
 	cmd.Stdout = log.Logger
 	cmd.Stderr = log.Logger
 	log.Debug().Str("cmd", cmd.String()).Msg("commit command")
 	if !dryRun {
-		if err := cmd.Run(); err != nil {
+		if err = cmd.Run(); err != nil {
 			log.Error().Err(err).Msg("failed to run git commit")
 			return
 		}
