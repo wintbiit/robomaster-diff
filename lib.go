@@ -158,21 +158,13 @@ func Diff(ctx context.Context, item *ItemInfo, compare []byte) (*DiffRecord, err
 		ItemInfo: item,
 	}
 
-	defer func() {
-		if rec.DiffType != DiffTypeChange {
-			return
-		}
+	if _, err = f.Seek(0, 0); err != nil {
+		log.Error().Err(err).Int("id", item.Id).Msg("failed to seek file")
+	}
 
-		log.Info().Str("path", p).Int("id", item.Id).Msg("updating file")
-
-		if _, err = f.Seek(0, 0); err != nil {
-			log.Error().Err(err).Int("id", item.Id).Msg("failed to seek file")
-		}
-
-		if _, err = f.Write(compare); err != nil {
-			log.Error().Err(err).Int("id", item.Id).Msg("failed to write file")
-		}
-	}()
+	if _, err = f.Write(compare); err != nil {
+		log.Error().Err(err).Int("id", item.Id).Msg("failed to write file")
+	}
 
 	if len(current) == 0 {
 		rec.DiffType = DiffTypeAdd
