@@ -124,7 +124,26 @@ func main() {
 		return
 	}
 
-	cmd = exec.Command("git", "commit", "-m", commitTitle, "-m", string(commitMessage))
+	commitMessageFile, err := os.CreateTemp("", "commit-message-*.txt")
+	if err != nil {
+		log.Error().Err(err).Msg("failed to create temp file")
+		return
+	}
+
+	defer commitMessageFile.Close()
+	defer os.Remove(commitMessageFile.Name())
+
+	if _, err = commitMessageFile.WriteString(commitTitle + "\n\n"); err != nil {
+		log.Error().Err(err).Msg("failed to write commit title")
+		return
+	}
+
+	if _, err = commitMessageFile.Write(commitMessage); err != nil {
+		log.Error().Err(err).Msg("failed to write commit message")
+		return
+	}
+
+	cmd = exec.Command("git", "commit", "-F", commitMessageFile.Name())
 	cmd.Stdout = log.Logger
 	cmd.Stderr = log.Logger
 	log.Debug().Str("cmd", cmd.String()).Msg("commit command")
