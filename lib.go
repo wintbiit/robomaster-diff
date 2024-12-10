@@ -9,11 +9,11 @@ import (
 	"os"
 	"time"
 
-	"github.com/sergi/go-diff/diffmatchpatch"
-
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
+	"github.com/sergi/go-diff/diffmatchpatch"
 	"golang.org/x/time/rate"
+	"jaytaylor.com/html2text"
 )
 
 type DiffType string
@@ -128,12 +128,19 @@ func Fetch(ctx context.Context, id int) ([]byte, *ItemInfo, error) {
 		return nil, nil, errors.Wrap(err, "extracting title")
 	}
 
+	contentText, err := html2text.FromString(string(content), html2text.Options{
+		PrettyTables: true,
+	})
+	if err != nil {
+		return nil, nil, errors.Wrap(err, "converting html to text")
+	}
+
 	log.Debug().
 		Str("url", url).
 		Int("id", id).
 		Str("title", title).
 		Msg("got content")
-	return content, &ItemInfo{
+	return []byte(contentText), &ItemInfo{
 		Id:    id,
 		Title: title,
 		Url:   url,
@@ -142,7 +149,7 @@ func Fetch(ctx context.Context, id int) ([]byte, *ItemInfo, error) {
 
 // Diff compares the hash of the content with the one stored in the file.
 func Diff(ctx context.Context, item *ItemInfo, compare []byte) (*DiffRecord, error) {
-	p := fmt.Sprintf("%s/%d.html", storagePath, item.Id)
+	p := fmt.Sprintf("%s/%d.txt", storagePath, item.Id)
 	f, err := os.OpenFile(p, os.O_RDWR|os.O_CREATE, 0o644)
 	if err != nil {
 		return nil, errors.Wrap(err, "opening file")
