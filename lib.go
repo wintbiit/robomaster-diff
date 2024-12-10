@@ -59,6 +59,7 @@ func GetStoragePath() string {
 type ItemInfo struct {
 	Id    int    `json:"id"`
 	Title string `json:"title"`
+	Url   string `json:"url"`
 }
 
 type DiffDetail struct {
@@ -132,7 +133,11 @@ func Fetch(ctx context.Context, id int) ([]byte, *ItemInfo, error) {
 		Int("id", id).
 		Str("title", title).
 		Msg("got content")
-	return content, &ItemInfo{Id: id, Title: title}, nil
+	return content, &ItemInfo{
+		Id:    id,
+		Title: title,
+		Url:   url,
+	}, nil
 }
 
 // Diff compares the hash of the content with the one stored in the file.
